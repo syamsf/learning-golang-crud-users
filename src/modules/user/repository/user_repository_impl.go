@@ -21,12 +21,15 @@ func (repository *UserRepositoryImpl) FindAll() []model.User {
 	return users
 }
 
-func (repository *UserRepositoryImpl) FindById(id int) model.User {
+func (repository *UserRepositoryImpl) FindById(id int) (*model.User, error) {
 	var user model.User
 
-	_ = repository.db.First(&user, id)
+	result := repository.db.First(&user, id)
+	if result.Error != nil {
+		return nil, result.Error
+	}
 	
-	return user
+	return &user, nil
 }
 
 func (repository *UserRepositoryImpl) Save(user model.User) (*model.User, error) {

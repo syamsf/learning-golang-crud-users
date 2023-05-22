@@ -25,8 +25,13 @@ func (service *UserServiceImpl) FindAll() []model.User {
 	return service.UserRepository.FindAll()
 }
 
-func (service *UserServiceImpl) FindById(id int) model.User {
-	return service.UserRepository.FindById(id)
+func (service *UserServiceImpl) FindById(id int) (*model.User, error) {
+	result, err := service.UserRepository.FindById(id)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 func (service *UserServiceImpl) Create(ctx *gin.Context) (*model.User, error) {
@@ -37,7 +42,6 @@ func (service *UserServiceImpl) Create(ctx *gin.Context) (*model.User, error) {
 	}
 
 	err := service.Validate.Struct(input)
-
 	if err != nil {
 		return nil, err
 	}

@@ -1,12 +1,15 @@
 package controller
 
 import (
-	"syamsf/learning-gin/src/modules/user/service"
-	"syamsf/learning-gin/src/model/web"
-	"syamsf/learning-gin/src/helper"
-	"github.com/gin-gonic/gin"
+	"errors"
 	"net/http"
 	"strconv"
+	"syamsf/learning-gin/src/helper"
+	"syamsf/learning-gin/src/model/web"
+	"syamsf/learning-gin/src/modules/user/service"
+	"syamsf/learning-gin/src/exception"
+	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 type UserControllerImpl struct {
@@ -34,12 +37,24 @@ func (controller *UserControllerImpl) FindAll(ctx *gin.Context) {
 func (controller *UserControllerImpl) FindById(ctx *gin.Context) {
 	id, _ := strconv.Atoi(ctx.Param("id"))
 
-	data := controller.UserService.FindById(id)
+	data, err := controller.UserService.FindById(id)
 	
 	webResponse := web.WebResponse{
 		Status: "OK",
 		Code: http.StatusOK,
 		Data: data,
+	}
+
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			ctx.AbortWithError(http.StatusNotFound, exception.NewNotFoundError(err.Error()))
+			return
+		}
+
+		customError := errors.New(err.Error())
+		ctx.AbortWithError(http.StatusInternalServerError, customError)
+		return
 	}
 
 	helper.WriteResponseBody(webResponse, ctx)
@@ -56,12 +71,9 @@ func (controller *UserControllerImpl) Create(ctx *gin.Context) {
 
 	
 	if err != nil {
-		webResponse.Code = http.StatusInternalServerError
-		webResponse.Status = "ERROR"
+		customError := errors.New(err.Error())
+		ctx.AbortWithError(http.StatusInternalServerError, customError)
 
-		helper.WriteResponseBody(webResponse, ctx)
-
-		ctx.Abort()
 		return
 	}
 
@@ -79,12 +91,9 @@ func (controller *UserControllerImpl) Update(ctx *gin.Context) {
 
 	
 	if err != nil {
-		webResponse.Code = http.StatusInternalServerError
-		webResponse.Status = "ERROR"
-
-		helper.WriteResponseBody(webResponse, ctx)
-
-		ctx.Abort()
+		customError := errors.New(err.Error())
+		ctx.AbortWithError(http.StatusInternalServerError, customError)
+		
 		return
 	}
 
@@ -99,15 +108,11 @@ func (controller *UserControllerImpl) Delete(ctx *gin.Context) {
 		Code: http.StatusOK,
 		Data: data,
 	}
-
 	
 	if err != nil {
-		webResponse.Code = http.StatusInternalServerError
-		webResponse.Status = "ERROR"
-
-		helper.WriteResponseBody(webResponse, ctx)
-
-		ctx.Abort()
+		customError := errors.New(err.Error())
+		ctx.AbortWithError(http.StatusInternalServerError, customError)
+		
 		return
 	}
 

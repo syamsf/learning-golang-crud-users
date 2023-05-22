@@ -7,7 +7,7 @@ import (
 
 type UserService interface {
 	FindAll() []model.User
-	FindById(id int) model.User
+	FindById(id int) (*model.User, error)
 	Create(ctx *gin.Context) (*model.User, error)
 	Update(ctx *gin.Context) (*model.User, error)
 	Delete(ctx *gin.Context) (*model.User, error)
